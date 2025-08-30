@@ -2,12 +2,12 @@
   "name": "kmce",
   "version": "1.0.0",
   "description": "JNTUH Results Backend",
-  "main": "server.js",
+  "main": "api/result.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node api/result.js"
   },
   "dependencies": {
-    "cors": "^2.8.5",
-    "express": "^5.1.0"
-  }
+    "node-fetch": "^3.4.0"
+  },
+  "type": "module"
 }
