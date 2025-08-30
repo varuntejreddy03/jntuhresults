@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>JNTUH Academic Results</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+      color: #f1f1f1;
+      margin: 0;
+      padding: 20px;
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 25px;
+      font-size: 28px;
+      background: linear-gradient(90deg, #00c6ff, #0072ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .input-box {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    input {
+      padding: 10px 14px;
+      border-radius: 6px;
+      border: none;
+      width: 250px;
+      outline: none;
+      margin-right: 8px;
+    }
+
+    button {
+      padding: 10px 16px;
+      border: none;
+      border-radius: 6px;
+      background: linear-gradient(90deg, #00c6ff, #0072ff);
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    button:hover {
+      background: linear-gradient(90deg, #0072ff, #00c6ff);
+      transform: scale(1.05);
+    }
+
+    .student-info {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      background: rgba(255, 255, 255, 0.08);
+      padding: 20px;
+      border-radius: 12px;
+      margin-bottom: 25px;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+
+    .semester-title {
+      margin-top: 25px;
+      text-align: center;
+      font-weight: bold;
+      font-size: 18px;
+      color: #00e6ff;
+      background: rgba(0, 0, 0, 0.4);
+      padding: 8px;
+      border-radius: 8px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+      margin-bottom: 10px;
+      overflow: hidden;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(8px);
+      box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    }
+
+    th, td {
+      padding: 10px;
+      text-align: center;
+      font-size: 14px;
+    }
+
+    th {
+      background: linear-gradient(90deg, #0072ff, #00c6ff);
+      color: white;
+    }
+
+    tr:nth-child(even) {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    tr:hover {
+      background: rgba(0, 198, 255, 0.2);
+      transition: 0.2s;
+    }
+
+    .semester-summary {
+      display: flex;
+      justify-content: space-around;
+      flex-wrap: wrap;
+      background: rgba(255,255,255,0.08);
+      margin: 10px 0 25px;
+      padding: 12px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: bold;
+      color: #00ffcc;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+
+    .footer {
+      text-align: center;
+      margin-top: 15px;
+      font-weight: bold;
+      font-size: 16px;
+      color: #00ffcc;
+    }
+
+    .loading {
+      text-align: center;
+      font-size: 16px;
+      color: #ffcc00;
+      font-weight: bold;
+    }
+
+    .error {
+      text-align: center;
+      font-size: 16px;
+      color: #ff4d4d;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h2>📘 JNTUH Academic Results</h2>
+
+  <div class="input-box">
+    <input type="text" id="rollInput" placeholder="Enter Hall Ticket Number">
+    <button onclick="getResult()">Get Result</button>
+  </div>
+
+  <div id="result"></div>
+
+  <script>
+    async function getResult() {
+      const rollNo = document.getElementById("rollInput").value.trim();
+      const resultDiv = document.getElementById("result");
+      resultDiv.innerHTML = '<div class="loading">⏳ Loading...</div>';
+
+      if (!rollNo) {
+        resultDiv.innerHTML = '<div class="error">⚠️ Please enter a roll number</div>';
+        return;
+      }
+
+      try {
+        const response = await fetch(`http://localhost:3000/api/result?rollNumber=${rollNo}`);
+        const data = await response.json();
+
+        if (!data.details) {
+          resultDiv.innerHTML = '<div class="error">❌ No data found</div>';
+          return;
+        }
+
+        // student info
+        let html = `
+          <div class="student-info">
+            <div><b>Name:</b> ${data.details.name}</div>
+            <div><b>Roll Number:</b> ${data.details.rollNumber}</div>
+            <div><b>College Code:</b> ${data.details.collegeCode}</div>
+            <div><b>Father's Name:</b> ${data.details.fatherName}</div>
+          </div>
+        `;
+
+        // semester results
+        data.results.semesters.forEach(sem => {
+          html += `<div class="semester-title">${sem.semester} Results</div>`;
+          html += `
+            <table>
+              <tr>
+                <th>Subject Code</th>
+                <th>Subject Name</th>
+                <th>Internal</th>
+                <th>External</th>
+                <th>Total</th>
+                <th>Grade</th>
+                <th>Credits</th>
+              </tr>
+          `;
+          sem.subjects.forEach(sub => {
+            html += `
+              <tr>
+                <td>${sub.subjectCode}</td>
+                <td>${sub.subjectName}</td>
+                <td>${sub.internalMarks}</td>
+                <td>${sub.externalMarks}</td>
+                <td>${sub.totalMarks}</td>
+                <td>${sub.grades}</td>
+                <td>${sub.credits}</td>
+              </tr>
+            `;
+          });
+          html += `</table>`;
+
+          // semester summary
+          html += `
+            <div class="semester-summary">
+              <div>📊 SGPA: ${sem.semesterSGPA || "N/A"}</div>
+              <div>🎯 Credits: ${sem.semesterCredits || "0"}</div>
+              <div>📘 Grade Points: ${sem.semesterGrades || "0"}</div>
+              <div>❌ Backlogs: ${sem.backlogs || "0"}</div>
+              <div>${sem.failed ? "⚠️ Status: Failed" : "✅ Status: Passed"}</div>
+            </div>
+          `;
+        });
+
+        // CGPA
+        if (data.results.cgpa) {
+          html += `<div class="footer">🎓 CGPA: ${data.results.cgpa}</div>`;
+        }
+
+        resultDiv.innerHTML = html;
+
+      } catch (err) {
+        resultDiv.innerHTML = '<div class="error">❌ Error fetching result</div>';
+        console.error(err);
+      }
+    }
+  </script>
+</body>
+</html>
